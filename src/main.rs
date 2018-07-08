@@ -3,7 +3,6 @@
   (https://tools.ietf.org/html/rfc1321)
 */
 
-
 /*
   ***Planning***
 
@@ -55,11 +54,49 @@
 
 */
 
-
-
-
-
-
 fn main() {
-    println!("Hello, world!");
+    let mut message = String::new();
+
+    println!("Please input message to hash: ");
+
+    std::io::stdin()
+        .read_line(&mut message)
+        .expect("Message input failure");
+
+    let m_buf: &[u8] = message.as_bytes();
+    let p_buf: Vec<u8> = pad(m_buf);
+    digest(p_buf);
+}
+
+// TODO jmg 7/7: add testing
+fn required_padding(buf_size: usize) -> u8 {
+    // pad until len(msg) is congruent with 448 mod 512
+    let bits_448: i32 = 56;
+    let bits_512: i32 = 64;
+
+    let buf_size = buf_size as i32; // cast to allow subtraction with i32
+    ((bits_448 - buf_size).abs() % bits_512) as u8
+}
+
+fn pad(msg: &[u8]) -> Vec<u8> {
+    let pad_1 = 0b10000000;
+    let pad_0 = 0b00000000;
+
+    println!("original message length: {}", msg.len());
+    println!("{:x?}", &msg);
+    let mut buf: Vec<u8> = Vec::new();
+
+    println!("Padding required: {}", required_padding(buf.len()));
+
+    for b in msg {
+        let n = b;
+        buf.push(*n)
+    }
+    buf
+}
+
+fn digest(msg: Vec<u8>) -> [u8; 4] {
+    let buf: [u8; 4] = [1, 2, 3, 4];
+    println!("Digesting {}", msg[1]);
+    buf
 }
