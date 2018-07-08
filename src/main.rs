@@ -50,15 +50,67 @@
         
   9. Return A, B, C, D as the final message 
       - Begin with low-order byte of A and end with high-order byte of D
+*/
 
+fn pad_req(buf_size: usize) -> u8 {
+    // pad until len(msg) is congruent with 448 mod 512
+    let bits_448: i32 = 56;
+    let bits_512: i32 = 64;
+    let buf_size = buf_size as i32; // cast to allow subtraction with i32
+    ((bits_448 - buf_size).abs() % bits_512) as u8
+}
 
+#[test]
+fn test_pad_req() {
+    let cases = [(8, 48), (90012, 36), (3, 53)];
+    for (ln, pad) in cases.iter() {
+        assert_eq!(pad_req(*ln), *pad);
+    }
+}
+
+fn pad(msg: &[u8]) -> Vec<u8> {
+    let pad_1 = 0b10000000;
+    let pad_0 = 0b00000000;
+
+    let mut buf: Vec<u8> = Vec::new();
+    for byte in msg {
+        buf.push(*byte);
+    }
+    buf.push(pad_1);
+
+    let mut iter = 0;
+    while iter < pad_req(buf.len()) {
+        buf.push(pad_0);
+        iter += 1;
+    }
+
+    let msg_len: u64 = msg.len() as u64;
+    let b1: u8 = msg_len | 0b0;
+    println!("{:#b}", b1);
+
+    println!("msg len: {:#x?}", msg_len);
+
+    buf
+}
+
+fn digest(msg: Vec<u8>) -> () {
+    let a: [u8; 4] = [0x01, 0x23, 0x45, 0x67];
+    let b: [u8; 4] = [0x89, 0xab, 0xcd, 0xef];
+    let c: [u8; 4] = [0xfe, 0xdc, 0xba, 0x98];
+    let d: [u8; 4] = [0x76, 0x54, 0x32, 0x10];
+}
+
+// digestion functions
+/*
+    fn f() {}
+    fn g() {}
+    fn h() {}
+    fn i() {}
 */
 
 fn main() {
     let mut message = String::new();
-
     println!("Please input message to hash: ");
-
     std::io::stdin()
         .read_line(&mut message)
         .expect("Message input failure");
@@ -66,37 +118,4 @@ fn main() {
     let m_buf: &[u8] = message.as_bytes();
     let p_buf: Vec<u8> = pad(m_buf);
     digest(p_buf);
-}
-
-// TODO jmg 7/7: add testing
-fn required_padding(buf_size: usize) -> u8 {
-    // pad until len(msg) is congruent with 448 mod 512
-    let bits_448: i32 = 56;
-    let bits_512: i32 = 64;
-
-    let buf_size = buf_size as i32; // cast to allow subtraction with i32
-    ((bits_448 - buf_size).abs() % bits_512) as u8
-}
-
-fn pad(msg: &[u8]) -> Vec<u8> {
-    let pad_1 = 0b10000000;
-    let pad_0 = 0b00000000;
-
-    println!("original message length: {}", msg.len());
-    println!("{:x?}", &msg);
-    let mut buf: Vec<u8> = Vec::new();
-
-    println!("Padding required: {}", required_padding(buf.len()));
-
-    for b in msg {
-        let n = b;
-        buf.push(*n)
-    }
-    buf
-}
-
-fn digest(msg: Vec<u8>) -> [u8; 4] {
-    let buf: [u8; 4] = [1, 2, 3, 4];
-    println!("Digesting {}", msg[1]);
-    buf
 }
