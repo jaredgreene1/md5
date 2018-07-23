@@ -53,7 +53,7 @@
 */
 
 fn pad_req(buf_size: usize) -> u8 {
-    // pad until len(msg) is congruent with 448 mod 512
+    // Calulate required padding for congruence with 448 mod 512
     let bits_448: i32 = 56;
     let bits_512: i32 = 64;
     let buf_size = buf_size as i32; // cast to allow subtraction with i32
@@ -68,7 +68,8 @@ fn test_pad_req() {
     }
 }
 
-fn pad(msg: &[u8]) -> Vec<u8> {
+fn pad_rnd1(msg: &[u8]) -> Vec<u8> {
+    // pad until len(msg) is congruent with 448 mod 512
     let pad_1 = 0b10000000;
     let pad_0 = 0b00000000;
 
@@ -83,14 +84,17 @@ fn pad(msg: &[u8]) -> Vec<u8> {
         buf.push(pad_0);
         iter += 1;
     }
-
-    let msg_len: u64 = msg.len() as u64;
-    let b1: u8 = msg_len | 0b0;
-    println!("{:#b}", b1);
-
-    println!("msg len: {:#x?}", msg_len);
-
     buf
+}
+
+fn pad_rnd2(mut msg: Vec<u8>) -> Vec<u8> {
+    // Pad the now congruent message with the message length
+    let msg_len: u64 = msg.len() as u64;
+    for i in 0..4 {
+        let msg_byte = msg_len >> (8 * i);
+        msg.push(msg_byte as u8);
+    }
+    msg
 }
 
 fn digest(msg: Vec<u8>) -> () {
@@ -116,6 +120,7 @@ fn main() {
         .expect("Message input failure");
 
     let m_buf: &[u8] = message.as_bytes();
-    let p_buf: Vec<u8> = pad(m_buf);
-    digest(p_buf);
+    let p1_buf: Vec<u8> = pad_rnd1(m_buf);
+    let p2_buf: Vec<u8> = pad_rnd2(p1_buf);
+    digest(p2_buf);
 }
