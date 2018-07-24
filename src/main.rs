@@ -78,12 +78,10 @@ fn pad_rnd1(msg: &[u8]) -> Vec<u8> {
         buf.push(*byte);
     }
     buf.push(pad_1);
-
-    let mut iter = 0;
-    while iter < pad_req(buf.len()) {
+    for i in 0..pad_req(buf.len()) {
         buf.push(pad_0);
-        iter += 1;
     }
+
     buf
 }
 
